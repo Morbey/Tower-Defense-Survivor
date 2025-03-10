@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: devdb
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      - postgres
+
+  game-data-service:
+    build: ./game-data-service
+    container_name: game-data-service
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      - postgres
+
+  match-service:
+    build: ./match-service
+    container_name: match-service
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      - postgres
+
+  gateway:
+    build: ./gateway
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      - auth-service
+      - game-data-service
+      - match-service
+
+volumes:
+  postgres-data:
